@@ -115,16 +115,28 @@
                     <h3>${offer.name_of_offer}</h3>
                     <p>${offer.description}</p>
                     <p><strong>Validity:</strong> ${offer.validity_time} days</p>
-                    <button class="button" onclick="claimOffer(${offer.offerID})">Claim</button>
+                    <button class="button" onclick="showClaimOffer(${offer.offerID})">Claim</button>
                 </div>
             `).join('');
             showView('offersView');
         }
 
+        function showClaimOffer(offerID) {
+            const claimForm = `
+                <h3>Claim Offer</h3>
+                <label for="claimUserId">Enter User ID:</label>
+                <input type="number" id="claimUserId"><br>
+                <button class="button" onclick="claimOffer(${offerID})">Submit</button>
+                <button class="button" onclick="showView('offersView')">Cancel</button>
+            `;
+            document.getElementById('claimOfferView').innerHTML = claimForm;
+            showView('claimOfferView');
+        }
+
         async function claimOffer(offerID) {
-            const userId = document.getElementById('userIdInput').value;
+            const userId = document.getElementById('claimUserId').value;
             if (!userId) {
-                alert('Please enter a user ID before claiming an offer.');
+                alert('Please enter a user ID.');
                 return;
             }
 
@@ -139,6 +151,7 @@
                 alert(result.error);
             } else {
                 alert('Offer claimed successfully!');
+                showView('offersView');
             }
         }
 
@@ -163,7 +176,7 @@
             if (result.error) {
                 alert(result.error);
             } else {
-                alert('User created successfully!');
+                alert(`User created successfully! User ID: ${result.userID}`);
                 showView('homeView');
             }
         }
@@ -189,27 +202,27 @@
         <div class="gallery">
             <div class="gallery-item">
                 <img src="1.png" alt="Image 1">
-                <p>Number of Members who joined by the Year</p>
+                <p>Caption for Image 1</p>
             </div>
             <div class="gallery-item">
                 <img src="2.png" alt="Image 2">
-                <p>Maximum Income by Gender</p>
+                <p>Caption for Image 2</p>
             </div>
             <div class="gallery-item">
                 <img src="3.png" alt="Image 3">
-                <p>Number of Entries by Channel</p>
+                <p>Caption for Image 3</p>
             </div>
             <div class="gallery-item">
                 <img src="4.png" alt="Image 4">
-                <p>Event count in Transcript</p>
+                <p>Caption for Image 4</p>
             </div>
             <div class="gallery-item">
                 <img src="5.png" alt="Image 5">
-                <p>Percentage Distribution of Events</p>
+                <p>Caption for Image 5</p>
             </div>
             <div class="gallery-item">
                 <img src="6.png" alt="Image 6">
-                <p>Scatter Plot of ACtive Customers by Age group</p>
+                <p>Caption for Image 6</p>
             </div>
         </div>
     </div>
@@ -223,6 +236,10 @@
         <h2>Available Offers</h2>
         <div id="offersContainer"></div>
         <button class="button" onclick="showView('homeView')">Back</button>
+    </div>
+
+    <div id="claimOfferView" class="view">
+        <!-- Claim Offer Form will be dynamically inserted here -->
     </div>
 
     <div id="createUserView" class="view">
