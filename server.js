@@ -192,6 +192,7 @@ app.post('/claims', (req, res) => {
 // Delete an offer by ID
 app.delete('/offers/:id', (req, res) => {
   const { id } = req.params;
+  console.log("Deleting offer with ID:", id);
 
   db.run(`DELETE FROM Offers WHERE offerID = ?`, [id], function (err) {
     if (err) {
@@ -210,6 +211,25 @@ app.get('/claims', (req, res) => {
     res.json(rows);
   });
 });
+
+// Route to get all data from a specific table
+app.get('/database/:table', (req, res) => {
+  const { table } = req.params;
+
+  // Validate the table name to prevent SQL injection
+  const allowedTables = ['Users', 'Offers', 'Claims'];
+  if (!allowedTables.includes(table)) {
+    return res.status(400).json({ error: 'Invalid table name' });
+  }
+
+  db.all(`SELECT * FROM ${table}`, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error: ' + err.message });
+    }
+    res.json(rows);
+  });
+});
+
 
 // Start Server
 app.listen(PORT, () => {
