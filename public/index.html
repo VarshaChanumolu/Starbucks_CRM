@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starbucks Offers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .view {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px;
+        }
+        .active {
+            display: block;
+        }
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+        }
+        .gallery-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .gallery-item p {
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        async function fetchUserDetails() {
+            const userId = document.getElementById('userIdInput').value;
+            if (!userId) {
+                alert('Please enter a user ID.');
+                return;
+            }
+
+            const userDetails = await fetch(`/users/${userId}`).then(res => res.json());
+            if (userDetails.error) {
+                alert(userDetails.error);
+                return;
+            }
+
+            document.getElementById('userDetails').innerHTML = `
+                <h3>User Details</h3>
+                <p><strong>Name:</strong> ${userDetails.name}</p>
+                <p><strong>Age:</strong> ${userDetails.age}</p>
+                <p><strong>Salary:</strong> ${userDetails.salary}</p>
+                <p><strong>Joining Date:</strong> ${userDetails.date_of_joining}</p>
+                <button class="button" onclick="editUserDetails(${userId})">Edit</button>
+            `;
+            showView('userDetailsView');
+        }
+
+        async function editUserDetails(userId) {
+            const newName = prompt('Enter new name:');
+            const newAge = prompt('Enter new age:');
+            const newSalary = prompt('Enter new salary:');
+            const newJoiningDate = prompt('Enter new joining date (YYYY-MM-DD):');
+
+            const response = await fetch(`/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, age: newAge, salary: newSalary, date_of_joining: newJoiningDate })
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                alert(result.error);
+            } else {
+                alert('User details updated successfully!');
+                fetchUserDetails();
+            }
+        }
+
+        async function fetchOffers() {
+            const offers = await fetch('/offers').then(res => res.json());
+            const offersContainer = document.getElementById('offersContainer');
+            offersContainer.innerHTML = offers.map(offer => `
+                <div class="offer">
+                    <h3>${offer.name_of_offer}</h3>
+                    <p>${offer.description}</p>
+                    <p><strong>Validity:</strong> ${offer.validity_time} days</p>
+                    <button class="button" onclick="claimOffer(${offer.offerID})">Claim</button>
+                </div>
+            `).join('');
+            showView('offersView');
+        }
+
+        async function claimOffer(offerID) {
+            const userId = document.getElementById('userIdInput').value;
+            if (!userId) {
+                alert('Please enter a user ID before claiming an offer.');
+                return;
+            }
+
+            const response = await fetch('/claims', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ offerID, userID: userId, claimed_date: new Date().toISOString().split('T')[0] })
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                alert(result.error);
+            } else {
+                alert('Offer claimed successfully!');
+            }
+        }
+
+        async function createUser() {
+            const name = document.getElementById('newUserName').value;
+            const age = document.getElementById('newUserAge').value;
+            const salary = document.getElementById('newUserSalary').value;
+            const date_of_joining = document.getElementById('newUserJoiningDate').value;
+
+            if (!name || !age || !salary || !date_of_joining) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const response = await fetch('/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, age, salary, date_of_joining }),
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                alert(result.error);
+            } else {
+                alert('User created successfully!');
+                showView('homeView');
+            }
+        }
+
+        function showCreateUserView() {
+            showView('createUserView');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showView('homeView');
+        });
+    </script>
+</head>
+<body>
+    <div id="homeView" class="view active">
+        <h1>Welcome to Starbucks Offers</h1>
+        <label for="userIdInput">Enter User ID:</label>
+        <input type="number" id="userIdInput">
+        <button class="button" onclick="fetchUserDetails()">Fetch User Details</button>
+        <button class="button" onclick="fetchOffers()">View Offers</button>
+        <button class="button" onclick="showCreateUserView()">Create User</button>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="1.png" alt="Image 1">
+                <p>Number of Members who joined by the Year</p>
+            </div>
+            <div class="gallery-item">
+                <img src="2.png" alt="Image 2">
+                <p>Maximum Income by Gender</p>
+            </div>
+            <div class="gallery-item">
+                <img src="3.png" alt="Image 3">
+                <p>Number of Entries by Channel</p>
+            </div>
+            <div class="gallery-item">
+                <img src="4.png" alt="Image 4">
+                <p>Event count in Transcript</p>
+            </div>
+            <div class="gallery-item">
+                <img src="5.png" alt="Image 5">
+                <p>Percentage Distribution of Events</p>
+            </div>
+            <div class="gallery-item">
+                <img src="6.png" alt="Image 6">
+                <p>Scatter Plot of ACtive Customers by Age group</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="userDetailsView" class="view">
+        <div id="userDetails"></div>
+        <button class="button" onclick="showView('homeView')">Back</button>
+    </div>
+
+    <div id="offersView" class="view">
+        <h2>Available Offers</h2>
+        <div id="offersContainer"></div>
+        <button class="button" onclick="showView('homeView')">Back</button>
+    </div>
+
+    <div id="createUserView" class="view">
+        <h2>Create New User</h2>
+        <label>Name: <input type="text" id="newUserName"></label><br>
+        <label>Age: <input type="number" id="newUserAge"></label><br>
+        <label>Salary: <input type="number" id="newUserSalary"></label><br>
+        <label>Joining Date: <input type="date" id="newUserJoiningDate"></label><br>
+        <button class="button" onclick="createUser()">Create User</button>
+        <button class="button" onclick="showView('homeView')">Back</button>
+    </div>
+</body>
+</html>
